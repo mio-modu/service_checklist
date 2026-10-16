@@ -61,7 +61,9 @@ export const SECTIONS: Section[] = [
       hint: '성경을 펴놓고 한 절씩 — 장·절, 개역개정 문구, 빠진 절. 토요예배 PD 필수.' },
     { id: 'b4', t: '추가 본문 자막 확인',
       hint: '설교 중 인용되는 본문 외 구절. 장·절과 문구가 맞는지.' },
-    { id: 'b3', t: '찬양 가사 하단자막 · 대표기도문 통자막 확인' },
+    { id: 'b3', t: '찬양 가사 자막 확인',
+      hint: '한 절씩 볼 것 없이 — 큐시트에 있는 곡이 맞는지, 오타는 없는지만 쭉' },
+    { id: 'b5', t: '대표기도문 통자막 확인' },
   ]},
   { no: '04', title: '영상', items: [
     { id: 'c1', t: '공동체 성경읽기 영상 — 파일 확인 · 재생 테스트', hint: '매주 고정' },
@@ -82,7 +84,7 @@ export const SECTIONS: Section[] = [
 
 /* ── 특별순서 · 영상 플래그 ─────────────────────────────── */
 
-export type FlagKey = 'promo' | 'vision' | 'communion' | 'baptism' | 'cert1on1' | 'certKids';
+export type FlagKey = 'promo' | 'vision' | 'communion' | 'baptism' | 'specialSong' | 'cert1on1' | 'certKids';
 export type Flags = Record<FlagKey, boolean> & { etc: string };
 
 export const VIDFLAGS = [
@@ -92,12 +94,20 @@ export const VIDFLAGS = [
 
 export const SPECIALS: { k: FlagKey; l: string; when: string; rule: string; items: Item[] }[] = [
   { k: 'communion', l: '성찬식', when: '설교 직후 · 약 8분', rule: '매월 첫째 주', items: [
-    { id: 'f1', t: '성찬식 집기 · 분병분잔 배치 확인', hint: '설교 종료 직후 바로 시작 · 약 8분 소요' },
-    { id: 'f2', t: '성찬식 조명 · 카메라 큐 확인', hint: '설교 → 성찬식 전환 타이밍 리허설' },
+    { id: 'f1', t: '분병기 · 분잔기 정위치 확인',
+      hint: '성찬팀이 알아서 준비합니다. 자리에 놓였는지만 눈으로.' },
+    { id: 'f3', t: '분병 · 분잔 담당 동선 확인' },
+    { id: 'f4', t: '분병 · 분잔 담당에게 도착 시각 연락',
+      hint: '문자나 전화로 한 번 더 — 몇 시까지 와달라고' },
   ]},
   { k: 'baptism', l: '세례식', when: '설교 후', rule: '해당 월 마지막 주', items: [
+    { id: 'g3', t: '세례자 리허설 시간까지 도착 확인' },
+    { id: 'g4', t: '세례자 동선 리허설 완료' },
     { id: 'g1', t: '세례자 명단 자막 확인 — 이름 · 순서' },
-    { id: 'g2', t: '세례식 동선 · 카메라 큐 확인' },
+  ]},
+  { k: 'specialSong', l: '특순', when: '설교 후 · 봉헌 전', rule: '그때그때', items: [
+    { id: 'k1', t: '특순자 도착 · 특순 리허설 완료' },
+    { id: 'k2', t: '특순 MR · 음향 · 조명 큐 확인' },
   ]},
   { k: 'cert1on1', l: '1대1 수료식', when: '', rule: '비정기', items: [
     { id: 'h1', t: '1대1 수료자 명단 자막 확인' },
@@ -167,7 +177,8 @@ export function autoFlags(week: string, baptismMonths = DEFAULT_BAPTISM_MONTHS):
     communion: nthWeek(sun) === 1,                                        // 매월 첫째 주 성찬식
     vision:    nthWeek(sun) === 2,                                        // 매월 둘째 주 비전헌금 영상
     baptism:   isLastWeek(sun) && baptismMonths.includes(monthOf(sun)),   // 해당 월 마지막 주 세례식
-    promo:     false,                                                     // 홍보 영상은 그때그때 — 기본 꺼짐
+    promo:       false,  // 홍보 영상은 그때그때 — 간사가 켭니다
+    specialSong: false,  // 특순도 그때그때
     cert1on1:  false,
     certKids:  false,
     etc:       '',
