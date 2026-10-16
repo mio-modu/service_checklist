@@ -63,7 +63,7 @@ export const SECTIONS: Section[] = [
       hint: '설교 중 인용되는 본문 외 구절. 장·절과 문구가 맞는지.' },
     { id: 'b3', t: '찬양 가사 자막 확인',
       hint: '한 절씩 볼 것 없이 — 큐시트에 있는 곡이 맞는지, 오타는 없는지만 쭉' },
-    { id: 'b5', t: '대표기도문 통자막 확인' },
+    { id: 'b5', t: '대표기도문 통자막 확인', hint: '오타만 보면 됩니다' },
     { id: 'b6', t: '광고 자막 확인',
       hint: '주보가 아니라 구두광고지 기준 — 거기 적힌 내용이 자막에 들어갔는지' },
   ]},
@@ -91,7 +91,8 @@ export type Flags = Record<FlagKey, boolean> & { etc: string };
 
 export const VIDFLAGS = [
   { k: 'promo'  as FlagKey, l: '홍보 영상',     when: '공동체 성경읽기 직후', rule: '그때그때' },
-  { k: 'vision' as FlagKey, l: '비전헌금 영상', when: '설교 종료 직후',       rule: '매월 둘째 주' },
+  { k: 'vision' as FlagKey, l: '비전헌금 · 작정헌금 영상', when: '설교 종료 직후',
+    rule: '매월 둘째 주 · 1월 첫 주' },
 ];
 
 export const SPECIALS: { k: FlagKey; l: string; when: string; rule: string; items: Item[] }[] = [
@@ -107,7 +108,7 @@ export const SPECIALS: { k: FlagKey; l: string; when: string; rule: string; item
     { id: 'g4', t: '세례자 동선 리허설 완료' },
     { id: 'g1', t: '세례자 명단 자막 확인 — 이름 · 순서' },
   ]},
-  { k: 'specialSong', l: '특순', when: '설교 후 · 봉헌 전', rule: '그때그때', items: [
+  { k: 'specialSong', l: '특순', when: '헌금 영상 직후', rule: '헌금 영상 있는 주', items: [
     { id: 'k1', t: '특순자 도착 · 특순 리허설 완료' },
     { id: 'k2', t: '특순 MR · 음향 · 조명 큐 확인' },
   ]},
@@ -177,10 +178,12 @@ export function autoFlags(week: string, baptismMonths = DEFAULT_BAPTISM_MONTHS):
   const sun = addDays(week, 1);
   return {
     communion: nthWeek(sun) === 1,                                        // 매월 첫째 주 성찬식
-    vision:    nthWeek(sun) === 2,                                        // 매월 둘째 주 비전헌금 영상
+    // 헌금 영상: 매월 둘째 주 비전헌금 + 매년 1월 첫 주 선교헌금 작정.
+    // 5~6월 더멋진세상 작정은 해마다 주차가 달라 간사가 직접 켭니다.
+    vision:    nthWeek(sun) === 2 || (monthOf(sun) === 1 && nthWeek(sun) === 1),
     baptism:   isLastWeek(sun) && baptismMonths.includes(monthOf(sun)),   // 해당 월 마지막 주 세례식
     promo:       false,  // 홍보 영상은 그때그때 — 간사가 켭니다
-    specialSong: false,  // 특순도 그때그때
+    specialSong: false,  // 아래 resolveFlags 에서 헌금 영상 유무를 따라갑니다
     cert1on1:  false,
     certKids:  false,
     etc:       '',
@@ -189,7 +192,10 @@ export function autoFlags(week: string, baptismMonths = DEFAULT_BAPTISM_MONTHS):
 
 /** 자동값 위에 관리자가 수동으로 덮어쓴 값을 얹는다 */
 export function resolveFlags(week: string, saved: Partial<Flags> | null, baptismMonths?: number[]): Flags {
-  return { ...autoFlags(week, baptismMonths), ...(saved ?? {}) } as Flags;
+  const f = { ...autoFlags(week, baptismMonths), ...(saved ?? {}) } as Flags;
+  // 특순은 헌금 영상이 있는 주에만 붙습니다. 간사가 직접 건드린 주는 그 뜻을 따릅니다.
+  if (saved?.specialSong === undefined) f.specialSong = f.vision;
+  return f;
 }
 export function isAutoOn(week: string, k: FlagKey, saved: Partial<Flags> | null, baptismMonths?: number[]) {
   return autoFlags(week, baptismMonths)[k] === true && saved?.[k] !== false;

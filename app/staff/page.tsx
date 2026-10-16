@@ -49,8 +49,13 @@ export default function StaffPage() {
         <section className="band">
           <h2><span className="c">/</span> 금주 특별순서 · 영상</h2>
           <p style={{ fontSize: 13, color: 'var(--ink-2)', wordBreak: 'keep-all' }}>
-            성찬식 · 비전헌금 · 세례식은 <b>주차를 보고 저절로</b> 켜집니다. 예외가 있는 주에만 손대세요.
-            홍보 영상은 매주 다르니 <b>간사님이 직접</b> 켜 주셔야 PD 체크리스트에 올라갑니다.
+            성찬식(첫 주) · 헌금 영상(둘째 주, 1월 첫 주) · 세례식(해당 월 마지막 주)은
+            <b> 주차를 보고 저절로</b> 켜집니다. 특순은 <b>헌금 영상이 있는 주에 따라붙습니다.</b>
+            예외가 있는 주에만 손대세요.
+          </p>
+          <p style={{ fontSize: 13, color: 'var(--ink-2)', wordBreak: 'keep-all' }}>
+            직접 켜 주셔야 하는 것은 둘입니다 — <b>홍보 영상</b>(매주 다름),
+            그리고 <b>5~6월 더멋진세상 작정</b> 주의 헌금 영상(해마다 주차가 달라 자동으로 잡히지 않습니다).
           </p>
 
           <div className="switches">
