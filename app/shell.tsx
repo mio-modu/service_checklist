@@ -1,0 +1,57 @@
+'use client';
+
+import Link from 'next/link';
+import {
+  addDays, currentSaturday, fmtDate, isLastWeek, monthOf, nthWeek,
+} from '../lib/domain';
+
+export function Shell({ here }: { here: 'check' | 'board' }) {
+  return (
+    <header className="top">
+      <div className="wrap">
+        <div className="mark">
+          <b>예배 PD 체크리스트</b>
+          <span>Onnuri Daejeon</span>
+        </div>
+        <nav className="nav">
+          <Link href="/" className={here === 'check' ? 'on' : ''}>체크</Link>
+          <Link href="/board" className={here === 'board' ? 'on' : ''}>현황판</Link>
+        </nav>
+      </div>
+    </header>
+  );
+}
+
+export function WeekBar({ week, setWeek }: { week: string; setWeek: (w: string) => void }) {
+  const sun = addDays(week, 1);
+  return (
+    <div className="weekbar">
+      <div className="wrap">
+        <button className="step" onClick={() => setWeek(addDays(week, -7))} aria-label="이전 주">◀</button>
+        <div className="wk">
+          <b>{fmtDate(week)} ~ {fmtDate(sun)}</b>
+          <em>
+            {monthOf(sun)}월 {nthWeek(sun)}주차{isLastWeek(sun) ? ' · 마지막 주' : ''}
+          </em>
+        </div>
+        {week !== currentSaturday() && (
+          <button className="now" onClick={() => setWeek(currentSaturday())}>이번 주</button>
+        )}
+        <button className="step" onClick={() => setWeek(addDays(week, 7))} aria-label="다음 주">▶</button>
+      </div>
+    </div>
+  );
+}
+
+export function OfflineWarn({ online }: { online: boolean }) {
+  if (online) return null;
+  return (
+    <div className="warn">
+      <span>!</span>
+      <span>
+        데이터베이스에 연결되지 않았습니다. 화면은 쓸 수 있지만 <b>저장되지 않습니다</b>.
+        Vercel 환경변수 NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY 를 확인하세요.
+      </span>
+    </div>
+  );
+}
