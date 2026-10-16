@@ -229,8 +229,8 @@ export default function CheckPage() {
             );
           })}
 
-          <Closing week={week} pick={pick} d={d} />
           <Jot week={week} pick={pick} d={d} />
+          <Closing week={week} pick={pick} d={d} />
         </section>
 
         <p className="foot">
@@ -244,9 +244,9 @@ export default function CheckPage() {
 /* ── 마감 보고 ───────────────────────────────────────── */
 function Closing({ week, pick, d }: { week: string; pick: SvcId; d: ReturnType<typeof useWeekData> }) {
   const c = d.getCheck(pick);
-  const [choice, setChoice] = useState<'' | 'none' | 'has'>('');
-  const [body, setBody] = useState('');
-  const [err, setErr] = useState(false);
+  const notes = d.logs.filter(l => l.week === week && l.svc === pick && l.kind !== 'closing');
+  const [extra, setExtra] = useState('');
+  const [writing, setWriting] = useState(false);
 
   if (c.closing?.at) {
     return (
@@ -256,25 +256,26 @@ function Closing({ week, pick, d }: { week: string; pick: SvcId; d: ReturnType<t
           <span className="sig">{hm(c.closing.at)} · {c.closing.pd || '이름 없음'}</span>
         </div>
         <div className="done-card">
-          <b>{c.closing.status === 'none' ? '특이사항 없음' : '특이사항 있음'}</b>
+          <b>{c.closing.status === 'none' ? '보고할 내용 없음' : '보고 내용'}</b>
           {c.closing.text}
         </div>
-        <button className="ghost" onClick={() => {
-          setChoice(c.closing!.status); setBody(c.closing!.status === 'has' ? c.closing!.text : '');
-          d.patchCheck(pick, { closing: null }, true);
-        }}>다시 작성</button>
+        <button className="ghost" onClick={() => d.patchCheck(pick, { closing: null }, true)}>
+          다시 작성
+        </button>
       </div>
     );
   }
 
   const submit = () => {
-    if (!choice) return;
-    const text = choice === 'has' ? body.trim() : '특이사항 없음';
-    if (choice === 'has' && !text) { setErr(true); return; }
+    const parts = notes.map(n => `${hm(n.created_at)} ${n.body}`);
+    const e = extra.trim();
+    if (e) parts.push(e);
+    const has = parts.length > 0;
     const at = new Date().toISOString();
-    d.patchCheck(pick, { closing: { status: choice, text, at, pd: c.pd || '' } }, true);
+    const text = has ? parts.join('\n') : '보고할 내용 없음';
+    d.patchCheck(pick, { closing: { status: has ? 'has' : 'none', text, at, pd: c.pd || '' } }, true);
     d.saveClosingLog(pick, text, c.pd || '', at);
-    setChoice(''); setBody(''); setErr(false);
+    setExtra(''); setWriting(false);
   };
 
   return (
@@ -283,22 +284,36 @@ function Closing({ week, pick, d }: { week: string; pick: SvcId; d: ReturnType<t
         <b>예배 후 마감 보고</b>
         <span className="need">필수</span>
       </div>
-      <p>
-        예배가 끝나면 반드시 제출합니다. 특이사항이 없어도 <b>“특이사항 없음”</b>으로 제출해야 마감됩니다.
-      </p>
-      <div className="two">
-        <button aria-pressed={choice === 'none'} onClick={() => setChoice('none')}>특이사항 없음</button>
-        <button aria-pressed={choice === 'has'} onClick={() => setChoice('has')}>특이사항 있음</button>
-      </div>
-      {choice === 'has' && (
+
+      {notes.length > 0 ? (
+        <>
+          <p>예배 중 적으신 <b>{notes.length}건</b>이 그대로 보고에 들어갑니다. 따로 또 쓰실 필요 없습니다.</p>
+          <div className="rollup">
+            {notes.map(n => (
+              <div key={n.id}><span>{hm(n.created_at)}</span>{n.body}</div>
+            ))}
+          </div>
+        </>
+      ) : (
+        <p>예배 중 적어두신 내용이 없습니다. 그대로 마감하시거나, 지금 적으셔도 됩니다.</p>
+      )}
+
+      {writing && (
         <div className="f">
-          <textarea value={body} autoFocus
-                    style={err ? { borderColor: 'var(--alert)' } : undefined}
-                    placeholder="무슨 일이 있었는지, 다음 주에 반영할 점까지 적어주세요"
-                    onChange={e => { setBody(e.target.value); setErr(false); }} />
+          <textarea value={extra} autoFocus
+                    placeholder="보고에 덧붙일 내용 — 다음 주에 반영할 점까지"
+                    onChange={e => setExtra(e.target.value)} />
         </div>
       )}
-      <button className="go" disabled={!choice} onClick={submit}>마감 보고 제출</button>
+
+      <div className="two">
+        <button className="go" onClick={submit}>
+          {notes.length || extra.trim() ? '이 내용으로 마감 보고' : '보고할 내용 없음으로 마감'}
+        </button>
+        {!writing && (
+          <button className="ghost" onClick={() => setWriting(true)}>덧붙일 내용 있음</button>
+        )}
+      </div>
     </div>
   );
 }
@@ -312,7 +327,7 @@ function Jot({ week, pick, d }: { week: string; pick: SvcId; d: ReturnType<typeo
   return (
     <div className="jot">
       <div className="f">
-        <label>수시 기록 <span className="lo">— 예배 중 생긴 일을 그때그때</span></label>
+        <label>예배 중 기록 <span className="lo">— 여기 적은 내용이 그대로 마감 보고로 올라갑니다</span></label>
       </div>
       <div className="kinds">
         <button aria-pressed={kind === 'special'} onClick={() => setKind('special')}>특이사항</button>

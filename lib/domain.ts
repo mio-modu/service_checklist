@@ -41,31 +41,40 @@ export type Item = {
 export type Section = { no: string; title: string; items: Item[] };
 
 export const SECTIONS: Section[] = [
-  { no: '01', title: '도착 · 예배 60분 전', items: [
-    { id: 'a1', t: '방송실 도착 · 장비 전원 및 송출 테스트' },
+  { no: '01', title: '도착 · 장비 확인', items: [
+    { id: 'a1', t: '방송실 도착' },
+    { id: 'a4', t: '모든 장비 전원 ON 확인',
+      hint: '카메라 · 스위처 · 오디오 콘솔 · 조명 콘솔 · 자막기 · 녹화기까지 하나씩' },
+    { id: 'a5', t: '방송 송출 확인',
+      hint: '중앙스크린 · 스테이지모니터 · 본당 밖 모니터까지 신호가 나가고 있는지' },
+    { id: 'a6', t: 'YouTube 스트리밍 확인',
+      hint: '예약 방송 · 스트림 키 연결 상태. 실제 송출 시작은 큐시트 BGM 시각에.' },
+    { id: 'd2', t: '다 같이 모여 기도', num: 'team_min', numLabel: '예배 시작',
+      hint: '장비 확인을 끝내고 방송팀이 함께' },
+  ]},
+  { no: '02', title: '준비 점검', items: [
     { id: 'a2', t: '내 큐시트(QCT) 최종 점검', hint: '순서 · 시간 · 담당자 이름까지 한 번 더. 미리 봤어도 다시 본다.' },
     { id: 'a3', t: '조명 · 음향 큐 확인', hint: '큐시트 비고란 대조 — 1층 40%, 양옆 차단기, 할로겐 ON/OFF' },
   ]},
-  { no: '02', title: '자막', items: [
+  { no: '03', title: '자막', items: [
     { id: 'b1', t: '설교 본문 자막 입력 완료' },
     { id: 'b2', t: '성경 본문 ↔ 자막 한 절씩 대조', must: true,
       hint: '장·절, 개역개정 문구, 빠진 절 없는지 확인. 토요예배 PD 필수.' },
     { id: 'b3', t: '찬양 가사 하단자막 · 대표기도문 통자막 확인' },
   ]},
-  { no: '03', title: '영상', items: [
+  { no: '04', title: '영상', items: [
     { id: 'c1', t: '공동체 성경읽기 영상 — 파일 확인 · 재생 테스트', hint: '매주 고정' },
     { id: 'c2', t: '홍보 영상 — 파일 확인', flag: 'promo',
       off: '이번 주 홍보 영상 없음', hint: '※ 항상 공동체 성경읽기 직후에 붙는다' },
     { id: 'c3', t: '비전헌금 영상 — 파일 확인', flag: 'vision',
       off: '이번 주 비전헌금 영상 없음', hint: '※ 항상 설교 종료 직후에 붙는다' },
   ]},
-  { no: '04', title: '섬김이 · 기도', items: [
+  { no: '05', title: '섬김이', items: [
     { id: 'd1', t: '대표기도자 도착 확인', num: 'prayer_min', numLabel: '예배 시작' },
-    { id: 'd2', t: '예배 전 함께 기도',     num: 'team_min',   numLabel: '예배 시작' },
     { id: 'd3', t: '사회자 · 찬양인도자 위치 확인' },
   ]},
-  { no: '05', title: '송출', items: [
-    { id: 'e1', t: 'YouTube Live 스트리밍 송출 시작' },
+  { no: '06', title: '송출', items: [
+    { id: 'e1', t: 'YouTube Live 스트리밍 송출 시작', hint: '큐시트 BGM 시각에' },
     { id: 'e2', t: '예배 후 스트리밍 종료' },
   ]},
 ];
