@@ -76,6 +76,14 @@ h1, h2, h3, p { margin: 0; text-align: left; }
 .nav a:last-child, .nav button:last-child { border-right: 0; }
 .nav .on { background: var(--glow); color: #000; }
 
+/* PD 화면 상단 — 간사·관리자가 바로 들어가는 칸 */
+.enter {
+  border: 1px solid var(--line-mid); padding: 7px 14px; flex: none;
+  font-size: 12.5px; font-weight: 600; color: var(--ink-3);
+  text-decoration: none; letter-spacing: .01em;
+}
+.enter:hover { border-color: var(--glow); color: var(--glow); }
+
 /* ── 주차 줄 ──────────────────────────────────────────── */
 .weekbar { border-bottom: 1px solid var(--line); }
 .weekbar .wrap { display: flex; align-items: center; gap: 12px; padding-block: 11px; }

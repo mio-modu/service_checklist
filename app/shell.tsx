@@ -26,7 +26,10 @@ export function Shell({ here }: { here: Where }) {
           <b>예배 PD 체크리스트</b>
           <span>{TAG[here]}</span>
         </div>
-        {/* PD 화면에는 다른 화면으로 가는 길을 두지 않습니다. */}
+        {/* PD 화면에서는 간사·관리자가 바로 들어갈 수 있게 한 칸만 둡니다. */}
+        {here === 'check' && (
+          <Link href="/gate" className="enter">간사 · 관리자</Link>
+        )}
         {here !== 'check' && (
           <nav className="nav">
             <Link href="/staff" className={here === 'staff' ? 'on' : ''}>금주 정보</Link>

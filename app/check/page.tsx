@@ -200,7 +200,6 @@ export default function CheckPage() {
 
         <p className="foot">
           체크는 누르는 즉시 저장되고 관리자 현황판에 실시간으로 올라갑니다. 예배 후 마감 보고까지 해야 끝납니다.
-          {' · '}<a href="/gate">간사 · 관리자</a>
         </p>
       </main>
     </>
