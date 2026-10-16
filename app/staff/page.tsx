@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { Shell, WeekBar, OfflineWarn } from '../shell';
+import { InstallHint } from '../install-hint';
 import { useWeekData } from '../../lib/data';
 import {
   SPECIALS, VIDFLAGS, FlagKey, currentSaturday, isAutoOn, resolveFlags,
@@ -23,6 +24,7 @@ export default function StaffPage() {
       <WeekBar week={week} setWeek={setWeek} />
       <main className="wrap">
         <OfflineWarn online={d.online} />
+        <InstallHint />
 
         <section className="band">
           <h2><span className="c">/</span> 금주 예배 정보</h2>

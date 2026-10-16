@@ -1,10 +1,11 @@
 'use client';
 
+import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { Shell, WeekBar, OfflineWarn } from '../shell';
 import { useWeekData } from '../../lib/data';
 import {
-  MAIN, SUB, STATUS_LABEL, KIND_LABEL, TITLE,
+  MAIN, SUB, SPECIALS, VIDFLAGS, STATUS_LABEL, KIND_LABEL, TITLE,
   SvcId, activeIds, addDays, ago, buildSections, currentSaturday, doneCount,
   fmtShort, hm, lastChecked, resolveFlags, statusOf, svc, svcName,
 } from '../../lib/domain';
@@ -21,6 +22,8 @@ export default function BoardPage() {
   );
   const ids = useMemo(() => activeIds(flags), [flags]);
   const list: SvcId[] = showSub ? [...MAIN, ...SUB] : MAIN;
+  const w = d.weekInfo;
+  const infoEmpty = !w.title && !w.scripture && !w.reading && !w.videos && !w.notice;
 
   /* ── 숫자 ─────────────────────────────────────────── */
   let closed = 0, running = 0, total = 0, newest = '';
@@ -92,6 +95,41 @@ export default function BoardPage() {
           </dl>
           {!showSub && (
             <button className="plus" onClick={() => setShowSub(true)}>세종 예배 포함해서 보기 +</button>
+          )}
+        </section>
+
+        {/* ── 금주 정보 — 간사가 못 넣었으면 관리자가 직접 ── */}
+        <section className="band">
+          <h2>
+            <span className="c">/</span> 금주 예배 정보
+            <Link href="/staff" className="ghost"
+                  style={{ marginLeft: 14, padding: '3px 10px', textDecoration: 'none' }}>
+              {infoEmpty ? '직접 입력' : '수정'}
+            </Link>
+          </h2>
+          {infoEmpty ? (
+            <div className="hint-empty" style={{ padding: '14px 0' }}>
+              아직 아무것도 들어오지 않았습니다. 간사님이 못 넣으셨다면 직접 넣으셔도 됩니다.
+            </div>
+          ) : (
+            <>
+              <dl className="facts">
+                <Fact k="설교 제목" v={d.weekInfo.title} />
+                <Fact k="설교 본문" v={d.weekInfo.scripture} />
+                <Fact k="공동체 성경읽기" v={d.weekInfo.reading} />
+                <Fact k="금주 행사 · 기타 영상" v={d.weekInfo.videos} />
+              </dl>
+              <div className="pills">
+                {VIDFLAGS.map(x => flags[x.k]
+                  ? <span key={x.k} className="pill on">{x.l}<em>{x.when}</em></span>
+                  : <span key={x.k} className="pill off">{x.l} 없음</span>)}
+                {SPECIALS.filter(x => flags[x.k]).map(x => (
+                  <span key={x.k} className="pill on">{x.l}{x.when && <em>{x.when}</em>}</span>
+                ))}
+                {flags.etc && <span className="pill on">{flags.etc}</span>}
+              </div>
+              {d.weekInfo.notice && <div className="saybox">{d.weekInfo.notice}</div>}
+            </>
           )}
         </section>
 
@@ -248,6 +286,15 @@ function Count({ k, v, of, src, tone }: {
       <dt>{k}</dt>
       <dd className={tone ?? ''}>{v}<small> / {of}</small></dd>
       <div className="src">{src}</div>
+    </div>
+  );
+}
+
+function Fact({ k, v }: { k: string; v: string }) {
+  return (
+    <div className="fact">
+      <dt>{k}</dt>
+      <dd className={v ? '' : 'none'}>{v || '미입력'}</dd>
     </div>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { Shell, WeekBar, OfflineWarn } from '../shell';
+import { InstallHint } from '../install-hint';
 import { useWeekData } from '../../lib/data';
 import {
   MAIN, SUB, SPECIALS, VIDFLAGS, KIND_LABEL,
@@ -45,6 +46,7 @@ export default function CheckPage() {
       <WeekBar week={week} setWeek={setWeek} />
       <main className="wrap">
         <OfflineWarn online={d.online} />
+        <InstallHint />
 
         {/* ── 금주 예배 정보 (간사가 기입, PD는 보기만) ──── */}
         <section className="band">

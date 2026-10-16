@@ -308,3 +308,70 @@ textarea { resize: vertical; min-height: 64px; font-family: inherit; line-height
   .ct dd { font-size: 32px; }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+
+/* ============================================================
+   손가락으로 쓰는 화면 — PD 는 대부분 폰으로 엽니다.
+   터치 기기에서만 키우므로 데스크톱 밀도는 그대로입니다.
+   ============================================================ */
+@media (pointer: coarse) {
+  /* iOS 는 16px 미만 입력칸에 초점이 가면 화면을 확대합니다 */
+  input[type=text], input[type=number], input[type=password], textarea { font-size: 16px; padding: 12px; }
+  .mins input { font-size: 15px; padding: 10px 6px; width: 72px; }
+
+  /* 누를 것은 최소 44px */
+  .step { width: 44px; height: 44px; font-size: 14px; }
+  .now { padding: 11px 14px; }
+  .pick { padding: 12px 16px; font-size: 14px; }
+  .plus { padding: 12px 16px; }
+  .r { padding: 14px 0; }
+  .r > .tick { width: 28px; height: 28px; font-size: 15px; margin-top: 0; }
+  .kinds button { padding: 10px 16px; }
+  .two button, .go { padding: 14px 20px; font-size: 15px; }
+  .ghost { padding: 11px 16px; }
+  .sw { padding: 14px; }
+  .mo { width: 44px; height: 44px; font-size: 14px; }
+  .nav a, .nav button { padding: 11px 16px; }
+  .x { padding: 8px 10px; margin: -8px -10px -8px auto; }
+  .na { padding: 8px 0 4px; }
+  .foot a { display: inline-block; padding: 8px 0; }
+  .editlink { padding: 8px 10px; }
+
+  /* 누르면 반응이 보이도록 */
+  button, a { -webkit-tap-highlight-color: rgba(200, 255, 61, .18); }
+  .r:active { background: var(--glow-ghost); }
+}
+
+/* 좁은 화면에서 숨 쉴 자리 */
+@media (max-width: 440px) {
+  .sheet-h { padding: 15px; gap: 14px; }
+  .gauge, .grp-h, .rows, .close, .jot { padding-left: 15px; padding-right: 15px; }
+  .grp-h { flex-wrap: wrap; }
+  .ck-title h1 { font-size: 19px; }
+  .counts { grid-template-columns: 1fr 1fr; }
+  .ct { padding-right: 14px; }
+  .ct dd { font-size: 28px; }
+  .svc .hd .pdn { margin-left: 0; width: 100%; }
+}
+
+/* 홈 화면에 추가 안내 */
+.install {
+  display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
+  border: 1px solid var(--glow); background: var(--glow-ghost);
+  padding: 13px 15px; margin-bottom: 4px;
+}
+.install p { flex: 1; min-width: 180px; font-size: 13px; color: var(--ink); word-break: keep-all; }
+.install p b { color: var(--glow); }
+.install .go { padding: 9px 16px; font-size: 13px; }
+.install .shut { color: var(--ink-3); font-size: 12px; padding: 8px 10px; flex: none; }
+.install .shut:hover { color: var(--ink); }
+
+/* 체크박스는 28px 로 보이되, 누르는 영역은 44px 로 넓힙니다 */
+@media (pointer: coarse) {
+  .r > .tick { position: relative; }
+  .r > .tick::after {
+    content: ""; position: absolute; left: 50%; top: 50%;
+    width: 46px; height: 46px; transform: translate(-50%, -50%);
+  }
+  .foot a { padding: 10px 4px; }
+  .install .shut { padding: 12px 14px; }
+}
