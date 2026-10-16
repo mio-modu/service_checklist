@@ -5,7 +5,7 @@ import { useMemo, useState } from 'react';
 import { Shell, WeekBar, OfflineWarn } from '../shell';
 import { useWeekData } from '../../lib/data';
 import {
-  MAIN, SUB, SPECIALS, VIDFLAGS, STATUS_LABEL, KIND_LABEL, TITLE,
+  MAIN, SUB, SPECIALS, VIDFLAGS, STATUS_LABEL, KIND_LABEL, TITLE, needsService,
   SvcId, activeIds, addDays, ago, buildSections, currentSaturday, doneCount,
   fmtShort, hm, lastChecked, resolveFlags, statusOf, svc, svcName,
 } from '../../lib/domain';
@@ -20,19 +20,26 @@ export default function BoardPage() {
     () => resolveFlags(week, d.weekInfo.flags, d.baptismMonths),
     [week, d.weekInfo.flags, d.baptismMonths],
   );
-  const ids = useMemo(() => activeIds(flags), [flags]);
+  const fsvc = d.weekInfo.flag_svcs;
+  const idsOf = useMemo(
+    () => (id: SvcId) => activeIds(flags, id, fsvc),
+    [flags, fsvc],
+  );
   const list: SvcId[] = showSub ? [...MAIN, ...SUB] : MAIN;
   const w = d.weekInfo;
   const infoEmpty = !w.title && !w.scripture && !w.reading && !w.videos && !w.notice;
+  const missing = needsService(flags, w.flag_svcs);
 
   /* ── 숫자 ─────────────────────────────────────────── */
-  let closed = 0, running = 0, total = 0, newest = '';
+  let closed = 0, running = 0, total = 0, totalOf = 0, newest = '';
   list.forEach(id => {
     const c = d.getCheck(id);
+    const myIds = idsOf(id);
     if (c.closing?.at) { closed++; if (c.closing.at > newest) newest = c.closing.at; }
-    const n = doneCount(c, ids);
+    const n = doneCount(c, myIds);
     if (n > 0) running++;
     total += n;
+    totalOf += myIds.length;
     const lc = lastChecked(c);
     if (lc && lc.at > newest) newest = lc.at;
   });
@@ -55,7 +62,7 @@ export default function BoardPage() {
     d.logs.filter(l => l.week === week).forEach(l =>
       ev.push({ at: l.created_at, svc: l.svc, text: l.body, pd: l.pd, kind: l.kind }));
     return ev.sort((a, b) => (a.at < b.at ? 1 : -1));
-  }, [d, list, week, ids]);
+  }, [d, list, week]);
 
   /* ── 누적 기록 ────────────────────────────────────── */
   const history = useMemo(() => {
@@ -88,8 +95,8 @@ export default function BoardPage() {
                    src={closed < list.length ? `${list.length - closed}개 예배 미제출` : '전 예배 마감'} />
             <Count k="진행 중" v={running} of={list.length}
                    src={newest ? `마지막 변동 ${ago(newest)}` : '아직 움직임 없음'} />
-            <Count k="전체 체크" v={total} of={list.length * ids.length}
-                   src={`항목 ${ids.length}개 × 예배 ${list.length}개 기준`} />
+            <Count k="전체 체크" v={total} of={totalOf}
+                   src={`예배 ${list.length}개 · 예배마다 항목 수가 다릅니다`} />
             <Report n={reports.length} fresh={freshCount}
                     last={reports[0] ? ago(reports[0].created_at) : ''} />
           </dl>
@@ -133,6 +140,17 @@ export default function BoardPage() {
           )}
         </section>
 
+        {missing.length > 0 && (
+          <div className="warn">
+            <span>!</span>
+            <span>
+              <b>{missing.map(m => m.l).join(' · ')}</b> 가 켜져 있는데 어느 예배에서 하는지
+              고르지 않았습니다. 고르기 전에는 어느 PD 화면에도 나오지 않습니다.
+              {' '}<Link href="/staff" style={{ fontWeight: 700 }}>지금 고르기 →</Link>
+            </span>
+          </div>
+        )}
+
         {/* ── 예배별 ──────────────────────────────────── */}
         <section className="band">
           <h2><span className="c">/</span> 예배별 진행</h2>
@@ -140,9 +158,10 @@ export default function BoardPage() {
             {list.map(id => {
               const sv = svc(id);
               const c = d.getCheck(id);
-              const n = doneCount(c, ids);
-              const st = statusOf(c, ids);
-              const pct = ids.length ? Math.round((n / ids.length) * 100) : 0;
+              const myIds = idsOf(id);
+              const n = doneCount(c, myIds);
+              const st = statusOf(c, myIds);
+              const pct = myIds.length ? Math.round((n / myIds.length) * 100) : 0;
               const lc = lastChecked(c);
               const notes = d.logs.filter(l => l.week === week && l.svc === id && l.kind !== 'closing');
               return (
@@ -154,13 +173,15 @@ export default function BoardPage() {
                     <span className="pdn">{c.pd || <span>PD 미지정</span>}</span>
                   </div>
                   <div className="meter">
-                    <div className="bar"><i style={{ width: `${pct}%` }} data-full={n > 0 && n === ids.length ? '1' : '0'} /></div>
-                    <span className="num">{n}/{ids.length}</span>
+                    <div className="bar"><i style={{ width: `${pct}%` }} data-full={n > 0 && n === myIds.length ? '1' : '0'} /></div>
+                    <span className="num">{n}/{myIds.length}</span>
                   </div>
                   <div className="chips">
                     {lc && <span className="chip hit">{hm(lc.at)} · {TITLE[lc.id] ?? lc.id}</span>}
                     <span className="chip">기도자 {c.prayer_min != null ? `${c.prayer_min}분 전` : '–'}</span>
                     <span className="chip">함께기도 {c.team_min != null ? `${c.team_min}분 전` : '–'}</span>
+                    {SPECIALS.filter(x => x.perService && flags[x.k] && fsvc?.[x.k]?.includes(id))
+                      .map(x => <span className="chip hit" key={x.k}>{x.l}</span>)}
                     {!c.items?.b2 && <span className="chip bad">본문↔자막 대조 미완료</span>}
                     {!c.closing?.at && <span className="chip bad">마감 보고 미제출</span>}
                   </div>

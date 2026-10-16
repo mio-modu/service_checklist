@@ -3,16 +3,18 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { supabase } from './supabase';
 import {
-  Check, Flags, Log, SvcId, DEFAULT_BAPTISM_MONTHS, emptyCheck, serviceDate, svcName,
+  Check, Flags, FlagSvcs, Log, SvcId, DEFAULT_BAPTISM_MONTHS, emptyCheck, serviceDate, svcName,
 } from './domain';
 
 export type WeekInfo = {
   week: string; title: string; scripture: string; reading: string;
-  videos: string; promo_note: string; notice: string; flags: Partial<Flags>;
+  videos: string; promo_note: string; notice: string;
+  flags: Partial<Flags>; flag_svcs: FlagSvcs;
 };
 
 export const emptyWeekInfo = (week: string): WeekInfo => ({
-  week, title: '', scripture: '', reading: '', videos: '', promo_note: '', notice: '', flags: {},
+  week, title: '', scripture: '', reading: '', videos: '', promo_note: '', notice: '',
+  flags: {}, flag_svcs: {},
 });
 
 /* ============================================================
@@ -121,7 +123,8 @@ export function useWeekData(week: string) {
       const w = weekRef.current;
       await supabase.from('weeks').upsert({
         week, title: w.title ?? '', scripture: w.scripture ?? '', reading: w.reading ?? '',
-        videos: w.videos ?? '', promo_note: w.promo_note ?? '', notice: w.notice ?? '', flags: w.flags ?? {},
+        videos: w.videos ?? '', promo_note: w.promo_note ?? '', notice: w.notice ?? '',
+        flags: w.flags ?? {}, flag_svcs: w.flag_svcs ?? {},
       }, { onConflict: 'week' });
     };
     if (immediate) flush(); else saveTimers.current.__week = setTimeout(flush, 400);

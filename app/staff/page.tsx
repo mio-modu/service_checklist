@@ -5,7 +5,8 @@ import { Shell, WeekBar, OfflineWarn } from '../shell';
 import { InstallHint } from '../install-hint';
 import { useWeekData } from '../../lib/data';
 import {
-  SPECIALS, VIDFLAGS, FlagKey, currentSaturday, isAutoOn, resolveFlags,
+  MAIN, SUB, SPECIALS, VIDFLAGS, FlagKey, currentSaturday, isAutoOn,
+  needsService, resolveFlags, svc,
 } from '../../lib/domain';
 
 export default function StaffPage() {
@@ -17,6 +18,15 @@ export default function StaffPage() {
   );
   const setFlag = (k: FlagKey | 'etc', v: boolean | string) =>
     d.patchWeek({ flags: { ...d.weekInfo.flags, [k]: v } });
+
+  /* 지정 예배가 필요한 순서 — 어느 예배에서 하는지 */
+  const picked = (k: FlagKey) => d.weekInfo.flag_svcs?.[k] ?? [];
+  const toggleSvc = (k: FlagKey, id: string) => {
+    const now = picked(k);
+    const next = now.includes(id) ? now.filter(x => x !== id) : [...now, id];
+    d.patchWeek({ flag_svcs: { ...d.weekInfo.flag_svcs, [k]: next } });
+  };
+  const missing = needsService(flags, d.weekInfo.flag_svcs);
 
   return (
     <>
@@ -75,6 +85,35 @@ export default function StaffPage() {
               </button>
             ))}
           </div>
+
+          {/* 특정 예배에서만 하는 순서는 어느 예배인지 찍어야 합니다 */}
+          {SPECIALS.filter(x => x.perService && flags[x.k]).map(x => (
+            <div className="f" key={x.k}>
+              <label>
+                {x.l} — 어느 예배에서 하나요?
+                {picked(x.k).length === 0 && <span className="lo"> · 아직 안 고르셨습니다</span>}
+              </label>
+              <div className="pickrow">
+                {[...MAIN, ...SUB].map(id => (
+                  <button key={id} className="pick" aria-pressed={picked(x.k).includes(id)}
+                          onClick={() => toggleSvc(x.k, id)}>
+                    {svc(id).site} {svc(id).name} <em>{svc(id).time}</em>
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
+
+          {missing.length > 0 && (
+            <div className="warn">
+              <span>!</span>
+              <span>
+                <b>{missing.map(m => m.l).join(' · ')}</b> 를 켜셨지만 예배를 고르지 않으셨습니다.
+                고르기 전에는 <b>어느 PD 화면에도 나오지 않습니다.</b> 없는 순서를 체크하느라
+                진행률이 영영 안 차는 일을 막기 위해서입니다.
+              </span>
+            </div>
+          )}
 
           <Field id="promo" label="홍보 영상 내용" v={d.weekInfo.promo_note ?? ''}
                  ph="예) 큐티세미나 안내(1'20) — 공동체 성경읽기 직후"

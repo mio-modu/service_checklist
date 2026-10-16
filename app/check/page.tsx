@@ -20,8 +20,11 @@ export default function CheckPage() {
     () => resolveFlags(week, d.weekInfo.flags, d.baptismMonths),
     [week, d.weekInfo.flags, d.baptismMonths],
   );
-  const sections = useMemo(() => buildSections(flags), [flags]);
-  const ids = useMemo(() => activeIds(flags), [flags]);
+  const fsvc = d.weekInfo.flag_svcs;
+  const sections = useMemo(() => buildSections(flags, pick, fsvc), [flags, pick, fsvc]);
+  const ids = useMemo(() => activeIds(flags, pick, fsvc), [flags, pick, fsvc]);
+  /* 예배 칩의 점은 각 예배의 자기 항목 수로 판단합니다 */
+  const idsOf = (id: SvcId) => activeIds(flags, id, fsvc);
 
   const s = svc(pick);
   const c = d.getCheck(pick);
@@ -93,7 +96,7 @@ export default function CheckPage() {
                 <span className="tagline">{label}</span>
                 {list.map(id => {
                   const sv = svc(id);
-                  const st = statusOf(d.getCheck(id), ids);
+                  const st = statusOf(d.getCheck(id), idsOf(id));
                   return (
                     <button key={id} className="pick" data-st={st} aria-pressed={pick === id}
                             onClick={() => setPick(id)}>

@@ -89,13 +89,23 @@ export const SECTIONS: Section[] = [
 export type FlagKey = 'promo' | 'vision' | 'communion' | 'baptism' | 'specialSong' | 'cert1on1' | 'certKids';
 export type Flags = Record<FlagKey, boolean> & { etc: string };
 
+/** 특정 예배에서만 하는 순서가 어느 예배에 붙는지. 예) { baptism: ['s2'] } */
+export type FlagSvcs = Partial<Record<FlagKey, string[]>>;
+
+/** 지정 예배가 필요한 순서인데 아무 예배도 고르지 않았는지 */
+export function needsService(f: Flags, fs: FlagSvcs | null | undefined) {
+  return SPECIALS.filter(s => s.perService && f[s.k] && !(fs?.[s.k]?.length));
+}
+
 export const VIDFLAGS = [
   { k: 'promo'  as FlagKey, l: '홍보 영상',     when: '공동체 성경읽기 직후', rule: '그때그때' },
   { k: 'vision' as FlagKey, l: '비전헌금 · 작정헌금 영상', when: '설교 종료 직후',
     rule: '매월 둘째 주 · 1월 첫 주' },
 ];
 
-export const SPECIALS: { k: FlagKey; l: string; when: string; rule: string; items: Item[] }[] = [
+/** perService: 모든 예배가 아니라 지정한 예배에서만 하는 순서 */
+export const SPECIALS: { k: FlagKey; l: string; when: string; rule: string;
+                        perService?: boolean; items: Item[] }[] = [
   { k: 'communion', l: '성찬식', when: '설교 직후 · 약 8분', rule: '매월 첫째 주', items: [
     { id: 'f1', t: '분병기 · 분잔기 정위치 확인',
       hint: '성찬팀이 알아서 준비합니다. 자리에 놓였는지만 눈으로.' },
@@ -103,7 +113,7 @@ export const SPECIALS: { k: FlagKey; l: string; when: string; rule: string; item
     { id: 'f4', t: '분병 · 분잔 담당에게 도착 시각 연락',
       hint: '문자나 전화로 한 번 더 — 몇 시까지 와달라고' },
   ]},
-  { k: 'baptism', l: '세례식', when: '설교 후', rule: '해당 월 마지막 주', items: [
+  { k: 'baptism', l: '세례식', when: '설교 후', rule: '해당 월 마지막 주', perService: true, items: [
     { id: 'g3', t: '세례자 리허설 시간까지 도착 확인' },
     { id: 'g4', t: '세례자 동선 리허설 완료' },
     { id: 'g1', t: '세례자 명단 자막 확인 — 이름 · 순서' },
@@ -112,11 +122,11 @@ export const SPECIALS: { k: FlagKey; l: string; when: string; rule: string; item
     { id: 'k1', t: '특순자 도착 · 특순 리허설 완료' },
     { id: 'k2', t: '특순 MR · 음향 · 조명 큐 확인' },
   ]},
-  { k: 'cert1on1', l: '1대1 수료식', when: '', rule: '비정기', items: [
+  { k: 'cert1on1', l: '1대1 수료식', when: '', rule: '비정기', perService: true, items: [
     { id: 'h1', t: '1대1 수료자 명단 자막 확인' },
     { id: 'h2', t: '수여 장면 카메라 큐 확인' },
   ]},
-  { k: 'certKids', l: '어린이 1대1 수료식', when: '', rule: '비정기', items: [
+  { k: 'certKids', l: '어린이 1대1 수료식', when: '', rule: '비정기', perService: true, items: [
     { id: 'i1', t: '어린이 수료자 명단 자막 확인' },
     { id: 'i2', t: '수여 장면 카메라 큐 확인' },
   ]},
@@ -205,19 +215,27 @@ export function isAutoOn(week: string, k: FlagKey, saved: Partial<Flags> | null,
 
 export type BuiltSection = { no: string; title: string; items: Item[]; off: Item[] };
 
-export function buildSections(f: Flags): BuiltSection[] {
+export function buildSections(f: Flags, svcId?: string, fs?: FlagSvcs | null): BuiltSection[] {
   const out: BuiltSection[] = SECTIONS.map(sec => ({
     no: sec.no, title: sec.title,
     items: sec.items.filter(i => !i.flag || f[i.flag]),
     off:   sec.items.filter(i => !!i.flag && !f[i.flag!]),
   }));
   const sp: Item[] = [];
-  SPECIALS.forEach(s => { if (f[s.k]) s.items.forEach(i => sp.push({ ...i, sp: s.l })); });
+  SPECIALS.forEach(s => {
+    if (!f[s.k]) return;
+    // 지정 예배가 필요한 순서는 그 예배의 PD 화면에만 올립니다.
+    // 고른 예배가 없으면 어느 PD 화면에도 올리지 않습니다 — 없는 항목을
+    // 체크하느라 영영 100% 가 안 되는 일을 막기 위함입니다.
+    if (s.perService && !(svcId && fs?.[s.k]?.includes(svcId))) return;
+    s.items.forEach(i => sp.push({ ...i, sp: s.l }));
+  });
   if (f.etc) sp.push({ id: 'z1', t: `기타 특별순서 — ${f.etc}`, hint: '큐시트에서 순서·시각 확인', sp: '기타' });
   if (sp.length) out.push({ no: '06', title: '특별순서', items: sp, off: [] });
   return out;
 }
-export const activeIds = (f: Flags) => buildSections(f).flatMap(s => s.items.map(i => i.id));
+export const activeIds = (f: Flags, svcId?: string, fs?: FlagSvcs | null) =>
+  buildSections(f, svcId, fs).flatMap(s => s.items.map(i => i.id));
 
 /* ── 상태 판정 ──────────────────────────────────────────── */
 

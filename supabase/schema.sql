@@ -13,7 +13,8 @@ create table if not exists public.weeks (
   videos      text default '',           -- 금주 행사 · 기타 영상
   promo_note  text default '',           -- 홍보 영상 내용
   notice      text default '',           -- PD 전달사항
-  flags       jsonb default '{}'::jsonb, -- 특별순서 수동 지정 {communion,baptism,promo,vision,...}
+  flags       jsonb default '{}'::jsonb, -- 특별순서 on/off
+  flag_svcs   jsonb default '{}'::jsonb, -- 특정 예배에서만 하는 순서가 붙는 예배 {"baptism":["s2"]}
   updated_at  timestamptz default now()
 );
 
