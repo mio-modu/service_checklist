@@ -46,10 +46,10 @@ export default function CheckPage() {
       <main className="wrap">
         <OfflineWarn online={d.online} />
 
-        {/* ── 금주 예배 정보 ───────────────────────────── */}
+        {/* ── 금주 특별순서 ───────────────────────────── */}
         <section className="band">
           <h2>
-            <span className="c">/</span> 금주 예배 정보
+            <span className="c">/</span> 금주 특별순서
             <button className="ghost" style={{ marginLeft: 14, padding: '3px 10px' }}
                     onClick={() => setEditWeek(v => !v)}>
               {editWeek ? '편집 끝' : '편집'}
@@ -58,19 +58,8 @@ export default function CheckPage() {
 
           {editWeek ? (
             <>
-              <div className="grid2">
-                <Field label="설교 제목" v={d.weekInfo.title} ph="예) 해같이 힘차게 솟아오르는 교회"
-                       on={v => d.patchWeek({ title: v })} />
-                <Field label="설교 본문" v={d.weekInfo.scripture} ph="예) 사사기 5:1-12, 31"
-                       on={v => d.patchWeek({ scripture: v })} />
-                <Field label="공동체 성경읽기" v={d.weekInfo.reading} ph="예) 요한계시록 2:1-29, 시편 133:1-3"
-                       on={v => d.patchWeek({ reading: v })} />
-                <Field label="기타 영상 · 메모" v={d.weekInfo.videos} ph="예) 창립 41주년 기념영상(2'00)"
-                       on={v => d.patchWeek({ videos: v })} />
-              </div>
-
               <div className="f">
-                <label>금주 특별순서 · 영상</label>
+                <label>이번 주에 있는 순서 <span className="lo">— 성찬식 · 비전헌금 · 세례식은 주차를 보고 저절로 켜집니다</span></label>
                 <div className="switches">
                   {[...VIDFLAGS, ...SPECIALS].map(x => (
                     <button key={x.k} className="sw" aria-pressed={!!flags[x.k]}
@@ -107,12 +96,6 @@ export default function CheckPage() {
             </>
           ) : (
             <>
-              <dl className="facts">
-                <Fact k="설교 제목" v={d.weekInfo.title} />
-                <Fact k="설교 본문" v={d.weekInfo.scripture} />
-                <Fact k="공동체 성경읽기" v={d.weekInfo.reading} />
-                <Fact k="기타 영상 · 메모" v={d.weekInfo.videos} />
-              </dl>
               <div className="pills">
                 {VIDFLAGS.map(x => flags[x.k] ? (
                   <span key={x.k} className="pill on">
@@ -209,6 +192,11 @@ export default function CheckPage() {
                             {it.sp && <span className="mark-sp">{it.sp}</span>}
                           </div>
                           {it.hint && <div className="sub">{it.hint}</div>}
+                          {it.flag && (
+                            <button className="na" onClick={() => setFlag(it.flag!, false)}>
+                              이번 주는 없음 — 항목 내리기
+                            </button>
+                          )}
                           {it.num && (
                             <div className="mins">
                               <span>{it.numLabel}</span>
@@ -229,11 +217,12 @@ export default function CheckPage() {
                     );
                   })}
                   {sec.off.map(it => (
-                    <div className="r skip" key={it.id}>
+                    <button className="r skip" key={it.id}
+                            onClick={() => setFlag(it.flag!, true)}>
                       <span className="nope">해당 없음</span>
                       <s>{it.t.split(' — ')[0]}</s>
-                      <span>{it.off}</span>
-                    </div>
+                      <span className="turnon">큐시트에 있으면 눌러서 항목 띄우기</span>
+                    </button>
                   ))}
                 </div>
               </div>
@@ -365,14 +354,6 @@ function Field({ label, v, ph, on }: { label: string; v: string; ph: string; on:
     <div className="f">
       <label>{label}</label>
       <input type="text" value={v ?? ''} placeholder={ph} onChange={e => on(e.target.value)} />
-    </div>
-  );
-}
-function Fact({ k, v }: { k: string; v: string }) {
-  return (
-    <div className="fact">
-      <dt>{k}</dt>
-      <dd className={v ? '' : 'none'}>{v || '미입력'}</dd>
     </div>
   );
 }
