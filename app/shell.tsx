@@ -5,18 +5,30 @@ import {
   addDays, currentSaturday, fmtDate, isLastWeek, monthOf, nthWeek,
 } from '../lib/domain';
 
-export function Shell({ here }: { here: 'check' | 'board' }) {
+type Where = 'check' | 'staff' | 'board';
+
+const TAG: Record<Where, string> = {
+  check: 'PD 체크',
+  staff: '예배담당 간사',
+  board: '관리자 현황판',
+};
+
+export function Shell({ here }: { here: Where }) {
   return (
     <header className="top">
       <div className="wrap">
         <div className="mark">
           <b>예배 PD 체크리스트</b>
-          <span>Onnuri Daejeon</span>
+          <span>{TAG[here]}</span>
         </div>
-        <nav className="nav">
-          <Link href="/" className={here === 'check' ? 'on' : ''}>체크</Link>
-          <Link href="/board" className={here === 'board' ? 'on' : ''}>현황판</Link>
-        </nav>
+        {/* PD 화면에는 다른 화면으로 가는 길을 두지 않습니다. */}
+        {here !== 'check' && (
+          <nav className="nav">
+            <Link href="/staff" className={here === 'staff' ? 'on' : ''}>금주 정보</Link>
+            <Link href="/board" className={here === 'board' ? 'on' : ''}>현황판</Link>
+            <Link href="/">PD 화면</Link>
+          </nav>
+        )}
       </div>
     </header>
   );

@@ -10,7 +10,8 @@ create table if not exists public.weeks (
   title       text default '',           -- 설교 제목
   scripture   text default '',           -- 설교 본문
   reading     text default '',           -- 공동체 성경읽기
-  videos      text default '',           -- 기타 영상 메모
+  videos      text default '',           -- 금주 행사 · 기타 영상
+  promo_note  text default '',           -- 홍보 영상 내용
   notice      text default '',           -- PD 전달사항
   flags       jsonb default '{}'::jsonb, -- 특별순서 수동 지정 {communion,baptism,promo,vision,...}
   updated_at  timestamptz default now()

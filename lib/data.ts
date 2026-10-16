@@ -8,11 +8,11 @@ import {
 
 export type WeekInfo = {
   week: string; title: string; scripture: string; reading: string;
-  videos: string; notice: string; flags: Partial<Flags>;
+  videos: string; promo_note: string; notice: string; flags: Partial<Flags>;
 };
 
 export const emptyWeekInfo = (week: string): WeekInfo => ({
-  week, title: '', scripture: '', reading: '', videos: '', notice: '', flags: {},
+  week, title: '', scripture: '', reading: '', videos: '', promo_note: '', notice: '', flags: {},
 });
 
 /* ============================================================
@@ -121,7 +121,7 @@ export function useWeekData(week: string) {
       const w = weekRef.current;
       await supabase.from('weeks').upsert({
         week, title: w.title ?? '', scripture: w.scripture ?? '', reading: w.reading ?? '',
-        videos: w.videos ?? '', notice: w.notice ?? '', flags: w.flags ?? {},
+        videos: w.videos ?? '', promo_note: w.promo_note ?? '', notice: w.notice ?? '', flags: w.flags ?? {},
       }, { onConflict: 'week' });
     };
     if (immediate) flush(); else saveTimers.current.__week = setTimeout(flush, 400);

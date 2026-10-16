@@ -13,7 +13,6 @@ export default function CheckPage() {
   const [week, setWeek] = useState(currentSaturday);
   const [pick, setPick] = useState<SvcId>('sat');
   const [showSub, setShowSub] = useState(false);
-  const [editWeek, setEditWeek] = useState(false);
 
   const d = useWeekData(week);
   const flags = useMemo(
@@ -28,7 +27,8 @@ export default function CheckPage() {
   const n = doneCount(c, ids);
   const pct = ids.length ? Math.round((n / ids.length) * 100) : 0;
 
-  const setFlag = (k: FlagKey | 'etc', v: boolean | string) =>
+  /* 홍보 영상처럼 주차로 판정할 수 없는 항목은 PD가 큐시트를 보고 직접 전환합니다. */
+  const setFlag = (k: FlagKey, v: boolean) =>
     d.patchWeek({ flags: { ...d.weekInfo.flags, [k]: v } });
 
   const toggle = (id: string) => {
@@ -46,74 +46,37 @@ export default function CheckPage() {
       <main className="wrap">
         <OfflineWarn online={d.online} />
 
-        {/* ── 금주 특별순서 ───────────────────────────── */}
+        {/* ── 금주 예배 정보 (간사가 기입, PD는 보기만) ──── */}
         <section className="band">
-          <h2>
-            <span className="c">/</span> 금주 특별순서
-            <button className="ghost" style={{ marginLeft: 14, padding: '3px 10px' }}
-                    onClick={() => setEditWeek(v => !v)}>
-              {editWeek ? '편집 끝' : '편집'}
-            </button>
-          </h2>
+          <h2><span className="c">/</span> 금주 예배 정보</h2>
 
-          {editWeek ? (
-            <>
-              <div className="f">
-                <label>이번 주에 있는 순서 <span className="lo">— 성찬식 · 비전헌금 · 세례식은 주차를 보고 저절로 켜집니다</span></label>
-                <div className="switches">
-                  {[...VIDFLAGS, ...SPECIALS].map(x => (
-                    <button key={x.k} className="sw" aria-pressed={!!flags[x.k]}
-                            onClick={() => setFlag(x.k, !flags[x.k])}>
-                      <i>✓</i>
-                      <span>{x.l}<small>{x.rule}{x.when ? ` · ${x.when}` : ''}</small></span>
-                    </button>
-                  ))}
-                </div>
-              </div>
+          <dl className="facts">
+            <Fact k="설교 제목" v={d.weekInfo.title} />
+            <Fact k="설교 본문" v={d.weekInfo.scripture} />
+            <Fact k="공동체 성경읽기" v={d.weekInfo.reading} />
+            <Fact k="금주 행사 · 기타 영상" v={d.weekInfo.videos} />
+          </dl>
 
-              <Field label="기타 특별순서 (직접 입력)" v={flags.etc} ph="예) 신년 감사예배 · 임직식"
-                     on={v => setFlag('etc', v)} />
+          <div className="pills">
+            {VIDFLAGS.map(x => flags[x.k] ? (
+              <span key={x.k} className="pill on">
+                {x.l}<em>{x.when}{isAutoOn(week, x.k, d.weekInfo.flags, d.baptismMonths) ? ' · 자동' : ''}</em>
+              </span>
+            ) : (
+              <span key={x.k} className="pill off">{x.l} 없음</span>
+            ))}
+            {SPECIALS.filter(x => flags[x.k]).map(x => (
+              <span key={x.k} className="pill on">
+                {x.l}{x.when && <em>{x.when}{isAutoOn(week, x.k, d.weekInfo.flags, d.baptismMonths) ? ' · 자동' : ''}</em>}
+              </span>
+            ))}
+            {flags.etc && <span className="pill on">{flags.etc}</span>}
+          </div>
 
-              <div className="f">
-                <label>세례식 시행 월 <span className="lo">— 해당 월 마지막 주에 자동으로 켜집니다</span></label>
-                <div className="months">
-                  {Array.from({ length: 12 }, (_, i) => i + 1).map(m => (
-                    <button key={m} className="mo" aria-pressed={d.baptismMonths.includes(m)}
-                            onClick={() => d.saveBaptismMonths(
-                              d.baptismMonths.includes(m)
-                                ? d.baptismMonths.filter(x => x !== m)
-                                : [...d.baptismMonths, m].sort((a, b) => a - b),
-                            )}>{m}</button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="f">
-                <label>PD 전달사항</label>
-                <textarea value={d.weekInfo.notice} placeholder="모든 PD에게 공통으로 전달할 내용"
-                          onChange={e => d.patchWeek({ notice: e.target.value })} />
-              </div>
-            </>
-          ) : (
-            <>
-              <div className="pills">
-                {VIDFLAGS.map(x => flags[x.k] ? (
-                  <span key={x.k} className="pill on">
-                    {x.l}<em>{x.when}{isAutoOn(week, x.k, d.weekInfo.flags, d.baptismMonths) ? ' · 자동' : ''}</em>
-                  </span>
-                ) : (
-                  <span key={x.k} className="pill off">{x.l} 없음</span>
-                ))}
-                {SPECIALS.filter(x => flags[x.k]).map(x => (
-                  <span key={x.k} className="pill on">
-                    {x.l}{x.when && <em>{x.when}{isAutoOn(week, x.k, d.weekInfo.flags, d.baptismMonths) ? ' · 자동' : ''}</em>}
-                  </span>
-                ))}
-                {flags.etc && <span className="pill on">{flags.etc}</span>}
-              </div>
-              {d.weekInfo.notice && <div className="saybox">{d.weekInfo.notice}</div>}
-            </>
+          {flags.promo && d.weekInfo.promo_note && (
+            <div className="saybox"><b>홍보 영상</b>{d.weekInfo.promo_note}</div>
           )}
+          {d.weekInfo.notice && <div className="saybox">{d.weekInfo.notice}</div>}
         </section>
 
         {/* ── 예배 고르기 ──────────────────────────────── */}
@@ -364,11 +327,12 @@ function Jot({ week, pick, d }: { week: string; pick: SvcId; d: ReturnType<typeo
 }
 
 /* ── 작은 조각 ───────────────────────────────────────── */
-function Field({ label, v, ph, on }: { label: string; v: string; ph: string; on: (v: string) => void }) {
+
+function Fact({ k, v }: { k: string; v: string }) {
   return (
-    <div className="f">
-      <label>{label}</label>
-      <input type="text" value={v ?? ''} placeholder={ph} onChange={e => on(e.target.value)} />
+    <div className="fact">
+      <dt>{k}</dt>
+      <dd className={v ? '' : 'none'}>{v || '미입력'}</dd>
     </div>
   );
 }
