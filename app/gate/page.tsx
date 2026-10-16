@@ -13,7 +13,7 @@ export default function GatePage() {
 
 function Gate() {
   const router = useRouter();
-  const to = useSearchParams().get('to') || '/board';
+  const to = useSearchParams().get('to') || '';
   const [pin, setPin] = useState('');
   const [msg, setMsg] = useState('');
   const [busy, setBusy] = useState(false);
@@ -29,7 +29,10 @@ function Gate() {
         body: JSON.stringify({ pin }),
       });
       const j = await r.json().catch(() => ({}));
-      if (j.ok) { router.replace(to); router.refresh(); return; }
+      if (j.ok) {
+        router.replace(to || (j.role === 'admin' ? '/board' : '/staff'));
+        router.refresh(); return;
+      }
       setMsg(
         j.reason === 'unset'
           ? 'PIN 이 아직 설정되지 않았습니다. Vercel 환경변수에 STAFF_PIN 과 ADMIN_PIN 을 넣고 재배포하세요.'
@@ -41,7 +44,9 @@ function Gate() {
     setBusy(false);
   };
 
-  const label = to.startsWith('/board') ? '관리자 현황판' : '예배담당 간사';
+  const label = to.startsWith('/board') ? '관리자 현황판'
+              : to.startsWith('/staff') ? '예배담당 간사'
+              : '간사 · 관리자 들어가기';
 
   return (
     <>
@@ -58,7 +63,7 @@ function Gate() {
         <section className="band" style={{ maxWidth: 420 }}>
           <h2><span className="c">/</span> {label}</h2>
           <p style={{ fontSize: 13.5, color: 'var(--ink-2)', wordBreak: 'keep-all' }}>
-            이 화면은 PIN 을 아는 분만 들어갑니다. 한 번 넣으면 이 기기에서는 두 달 동안 다시 묻지 않습니다.
+            받으신 PIN 을 넣으면 그에 맞는 화면이 열립니다. 한 번 넣으면 이 기기에서는 두 달 동안 다시 묻지 않고, 그 뒤로는 같은 주소로 들어오셔도 바로 그 화면이 뜹니다.
           </p>
           <form onSubmit={submit} className="f" style={{ gap: 12 }}>
             <label htmlFor="pin">PIN</label>
@@ -76,7 +81,7 @@ function Gate() {
             </div>
           )}
           <p className="foot">
-            PD 체크 화면은 PIN 없이 들어갑니다 — 주소 끝의 /gate 를 지우고 접속하세요.
+            PD 체크 화면은 PIN 이 필요 없습니다.
           </p>
         </section>
       </main>

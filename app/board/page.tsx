@@ -35,6 +35,13 @@ export default function BoardPage() {
   });
 
   /* ── 타임라인 ─────────────────────────────────────── */
+  /* 이번 주 예배 중 보고 (마감 보고 제외) */
+  const reports = useMemo(
+    () => d.logs.filter(l => l.week === week && l.kind !== 'closing'),
+    [d.logs, week],
+  );
+  const freshCount = reports.filter(l => Date.now() - new Date(l.created_at).getTime() < 30 * 60_000).length;
+
   const feed = useMemo(() => {
     const ev: { at: string; svc: SvcId; text: string; pd: string; kind: string }[] = [];
     list.forEach(id => {
@@ -80,6 +87,8 @@ export default function BoardPage() {
                    src={newest ? `마지막 변동 ${ago(newest)}` : '아직 움직임 없음'} />
             <Count k="전체 체크" v={total} of={list.length * ids.length}
                    src={`항목 ${ids.length}개 × 예배 ${list.length}개 기준`} />
+            <Report n={reports.length} fresh={freshCount}
+                    last={reports[0] ? ago(reports[0].created_at) : ''} />
           </dl>
           {!showSub && (
             <button className="plus" onClick={() => setShowSub(true)}>세종 예배 포함해서 보기 +</button>
@@ -123,11 +132,18 @@ export default function BoardPage() {
                       {c.closing.text}
                     </div>
                   )}
-                  {notes.slice(0, 3).map(l => (
-                    <div className="quote" key={l.id}>
-                      <b>{hm(l.created_at)} · {KIND_LABEL[l.kind]}</b>{l.body}
-                    </div>
-                  ))}
+                  {notes.slice(0, 3).map(l => {
+                    const fresh = Date.now() - new Date(l.created_at).getTime() < 30 * 60_000;
+                    return (
+                      <div className={`quote${fresh ? ' fresh' : ''}`} key={l.id}>
+                        <b>
+                          {hm(l.created_at)} · {KIND_LABEL[l.kind]}
+                          {fresh && <span className="just">{ago(l.created_at)}</span>}
+                        </b>
+                        {l.body}
+                      </div>
+                    );
+                  })}
                 </div>
               );
             })}
@@ -211,6 +227,16 @@ export default function BoardPage() {
         </p>
       </main>
     </>
+  );
+}
+
+function Report({ n, fresh, last }: { n: number; fresh: number; last: string }) {
+  return (
+    <div className="ct">
+      <dt>예배 중 보고</dt>
+      <dd className={fresh ? 'good' : ''}>{n}<small> 건</small></dd>
+      <div className="src">{n === 0 ? '아직 없음' : fresh ? `방금 ${fresh}건 · 마지막 ${last}` : `마지막 ${last}`}</div>
+    </div>
   );
 }
 

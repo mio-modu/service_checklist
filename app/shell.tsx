@@ -7,6 +7,11 @@ import {
 
 type Where = 'check' | 'staff' | 'board';
 
+async function signOut() {
+  await fetch('/api/gate', { method: 'DELETE' }).catch(() => {});
+  window.location.href = '/check';
+}
+
 const TAG: Record<Where, string> = {
   check: 'PD 체크',
   staff: '예배담당 간사',
@@ -26,7 +31,8 @@ export function Shell({ here }: { here: Where }) {
           <nav className="nav">
             <Link href="/staff" className={here === 'staff' ? 'on' : ''}>금주 정보</Link>
             <Link href="/board" className={here === 'board' ? 'on' : ''}>현황판</Link>
-            <Link href="/">PD 화면</Link>
+            <Link href="/check">PD 화면</Link>
+            <button onClick={signOut}>나가기</button>
           </nav>
         )}
       </div>

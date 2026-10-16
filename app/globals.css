@@ -283,6 +283,11 @@ textarea { resize: vertical; min-height: 64px; font-family: inherit; line-height
 .chip.bad { border-color: var(--alert); color: var(--alert); font-family: var(--sans); font-weight: 600; }
 .quote { border-left: 2px solid var(--line-high); padding: 9px 0 9px 13px; font-size: 13px; color: var(--ink-2); white-space: pre-wrap; word-break: keep-all; }
 .quote.lit { border-left-color: var(--glow); }
+.quote.fresh { border-left-color: var(--glow); background: var(--glow-ghost); }
+.quote.fresh b { color: var(--glow); }
+.quote .just { font-family: var(--sans); font-size: 10px; font-weight: 700; letter-spacing: 0;
+  color: #000; background: var(--glow); padding: 1px 6px; margin-left: 8px; text-transform: none; }
+.line.said { border-left: 2px solid var(--glow); padding-left: 11px; margin-left: -13px; }
 .quote b { display: block; font-family: var(--mono); font-size: 10px; letter-spacing: .11em; color: var(--ink-3); margin-bottom: 3px; text-transform: uppercase; }
 
 .filters { display: flex; gap: 8px; flex-wrap: wrap; }
